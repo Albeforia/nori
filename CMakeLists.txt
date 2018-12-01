@@ -3,6 +3,8 @@ project(nori)
 
 add_subdirectory(ext ext_build)
 
+FIND_PACKAGE(embree 3.3 REQUIRED)
+
 include_directories(
   # Nori include files
   ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -14,6 +16,8 @@ include_directories(
   ${OPENEXR_INCLUDE_DIRS}
   # Intel Thread Building Blocks
   ${TBB_INCLUDE_DIR}
+  # Intel Embree ray tracing kernels
+  ${EMBREE_INCLUDE_DIRS}
   # Pseudorandom number generator
   ${PCG32_INCLUDE_DIR}
   # PugiXML parser
@@ -103,7 +107,7 @@ add_executable(warptest
   src/common.cpp
 )
 
-target_link_libraries(nori tbb_static pugixml IlmImf nanogui ${NANOGUI_EXTRA_LIBS})
+target_link_libraries(nori tbb_static ${EMBREE_LIBRARY} pugixml IlmImf nanogui ${NANOGUI_EXTRA_LIBS})
 target_link_libraries(warptest tbb_static nanogui ${NANOGUI_EXTRA_LIBS})
 
 # vim: set et ts=2 sw=2 ft=cmake nospell:

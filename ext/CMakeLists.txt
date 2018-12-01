@@ -114,10 +114,13 @@ set_property(TARGET IexMath eLut toFloat b44ExpLogTable dwaLookups CopyIlmBaseLi
 # Build Thread Building Blocks (main shared libraries only)
 set(TBB_BUILD_SHARED          OFF  CACHE BOOL " " FORCE)
 set(TBB_BUILD_STATIC          ON  CACHE BOOL " " FORCE)
-set(TBB_BUILD_TBBMALLOC       OFF CACHE BOOL " " FORCE)
+set(TBB_BUILD_TBBMALLOC       OFF CACHE BOOL " ")
 set(TBB_BUILD_TBBMALLOC_PROXY OFF CACHE BOOL " " FORCE)
 add_subdirectory(tbb)
 set_property(TARGET tbb_static tbb_def_files PROPERTY FOLDER "dependencies")
+if(TBB_BUILD_TBBMALLOC)
+  set_property(TARGET tbbmalloc_static PROPERTY FOLDER "dependencies")
+endif()
 
 # Build NanoGUI
 set(NANOGUI_BUILD_EXAMPLE OFF CACHE BOOL " " FORCE)
@@ -132,7 +135,7 @@ set_property(TARGET pugixml PROPERTY
    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/pugixml")
 set_property(TARGET pugixml PROPERTY FOLDER "dependencies")
 
-set(OPENEXR_INCLUDE_DIRS 
+set(OPENEXR_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}/openexr/IlmBase/Imath
   ${CMAKE_CURRENT_SOURCE_DIR}/openexr/IlmBase/Iex
   ${CMAKE_CURRENT_SOURCE_DIR}/openexr/IlmBase/Half
@@ -141,7 +144,7 @@ set(OPENEXR_INCLUDE_DIRS
   ${CMAKE_CURRENT_BINARY_DIR}/openexr/IlmBase/config)
 set(PCG32_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/pcg32)
-set(TFM_INCLUDE_DIR 
+set(TFM_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/tinyformat)
 set(HYPOTHESIS_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/hypothesis)
