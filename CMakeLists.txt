@@ -5,6 +5,32 @@ add_subdirectory(ext ext_build)
 
 FIND_PACKAGE(embree 3.3 REQUIRED)
 
+if(EMBREE_STATIC_LIB)
+  add_definitions(-DEMBREE_STATIC_LIB)
+  list(INSERT EMBREE_LIBRARIES 0
+    ${EMBREE_ROOT_DIR}/lib/lexers.lib
+    ${EMBREE_ROOT_DIR}/lib/math.lib
+    ${EMBREE_ROOT_DIR}/lib/simd.lib
+    ${EMBREE_ROOT_DIR}/lib/sys.lib
+    ${EMBREE_ROOT_DIR}/lib/tasking.lib
+  )
+  if(EMBREE_ISA_SSE42)
+    list(APPEND EMBREE_LIBRARIES ${EMBREE_ROOT_DIR}/lib/embree_sse42.lib)
+  endif()
+  if(EMBREE_ISA_AVX)
+    list(APPEND EMBREE_LIBRARIES ${EMBREE_ROOT_DIR}/lib/embree_avx.lib)
+  endif()
+  if(EMBREE_ISA_AVX2)
+    list(APPEND EMBREE_LIBRARIES ${EMBREE_ROOT_DIR}/lib/embree_avx2.lib)
+  endif()
+  if(EMBREE_ISA_AVX512KNL)
+    list(APPEND EMBREE_LIBRARIES ${EMBREE_ROOT_DIR}/lib/embree_avx512knl.lib)
+  endif()
+  if(EMBREE_ISA_AVX512SKX)
+    list(APPEND EMBREE_LIBRARIES ${EMBREE_ROOT_DIR}/lib/embree_avx512skx.lib)
+  endif()
+endif()
+
 include_directories(
   # Nori include files
   ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -107,7 +133,7 @@ add_executable(warptest
   src/common.cpp
 )
 
-target_link_libraries(nori tbb_static ${EMBREE_LIBRARY} pugixml IlmImf nanogui ${NANOGUI_EXTRA_LIBS})
+target_link_libraries(nori tbb_static ${EMBREE_LIBRARIES} pugixml IlmImf nanogui ${NANOGUI_EXTRA_LIBS})
 target_link_libraries(warptest tbb_static nanogui ${NANOGUI_EXTRA_LIBS})
 
 # vim: set et ts=2 sw=2 ft=cmake nospell:
