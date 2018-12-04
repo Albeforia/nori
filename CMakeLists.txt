@@ -76,6 +76,7 @@ add_executable(nori
   include/nori/camera.h
   include/nori/color.h
   include/nori/common.h
+  include/nori/device.h
   include/nori/dpdf.h
   include/nori/frame.h
   include/nori/integrator.h

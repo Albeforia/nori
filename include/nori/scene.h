@@ -19,6 +19,8 @@
 #pragma once
 
 #include <nori/accel.h>
+#include <embree3/rtcore.h>
+#include <unordered_map>
 
 NORI_NAMESPACE_BEGIN
 
@@ -31,34 +33,34 @@ NORI_NAMESPACE_BEGIN
  */
 class Scene : public NoriObject {
 public:
-    /// Construct a new scene object
-    Scene(const PropertyList &);
+	/// Construct a new scene object
+	Scene(const PropertyList &);
 
-    /// Release all memory
-    virtual ~Scene();
+	/// Release all memory
+	virtual ~Scene();
 
-    /// Return a pointer to the scene's kd-tree
-    const Accel *getAccel() const { return m_accel; }
+	/// Return a pointer to the scene's kd-tree
+	const Accel *getAccel() const { return m_accel; }
 
-    /// Return a pointer to the scene's integrator
-    const Integrator *getIntegrator() const { return m_integrator; }
+	/// Return a pointer to the scene's integrator
+	const Integrator *getIntegrator() const { return m_integrator; }
 
-    /// Return a pointer to the scene's integrator
-    Integrator *getIntegrator() { return m_integrator; }
+	/// Return a pointer to the scene's integrator
+	Integrator *getIntegrator() { return m_integrator; }
 
-    /// Return a pointer to the scene's camera
-    const Camera *getCamera() const { return m_camera; }
+	/// Return a pointer to the scene's camera
+	const Camera *getCamera() const { return m_camera; }
 
-    /// Return a pointer to the scene's sample generator (const version)
-    const Sampler *getSampler() const { return m_sampler; }
+	/// Return a pointer to the scene's sample generator (const version)
+	const Sampler *getSampler() const { return m_sampler; }
 
-    /// Return a pointer to the scene's sample generator
-    Sampler *getSampler() { return m_sampler; }
+	/// Return a pointer to the scene's sample generator
+	Sampler *getSampler() { return m_sampler; }
 
-    /// Return a reference to an array containing all meshes
-    const std::vector<Mesh *> &getMeshes() const { return m_meshes; }
+	/// Return a reference to an array containing all meshes
+	const std::vector<Mesh *> &getMeshes() const { return m_meshes; }
 
-    /**
+	/**
      * \brief Intersect a ray against all triangles stored in the scene
      * and return detailed intersection information
      *
@@ -72,11 +74,11 @@ public:
      *
      * \return \c true if an intersection was found
      */
-    bool rayIntersect(const Ray3f &ray, Intersection &its) const {
-        return m_accel->rayIntersect(ray, its, false);
-    }
+	bool rayIntersect(const Ray3f &ray, Intersection &its) const {
+		return rayIntersect(ray, its, false);
+	}
 
-    /**
+	/**
      * \brief Intersect a ray against all triangles stored in the scene
      * and \a only determine whether or not there is an intersection.
      *
@@ -91,37 +93,46 @@ public:
      *
      * \return \c true if an intersection was found
      */
-    bool rayIntersect(const Ray3f &ray) const {
-        Intersection its; /* Unused */
-        return m_accel->rayIntersect(ray, its, true);
-    }
+	bool rayIntersect(const Ray3f &ray) const {
+		Intersection its; /* Unused */
+		return rayIntersect(ray, its, true);
+	}
 
-    /// \brief Return an axis-aligned box that bounds the scene
-    const BoundingBox3f &getBoundingBox() const {
-        return m_accel->getBoundingBox();
-    }
+	/// \brief Return an axis-aligned box that bounds the scene
+	const BoundingBox3f &getBoundingBox() const {
+		return m_accel->getBoundingBox();
+	}
 
-    /**
+	/**
      * \brief Inherited from \ref NoriObject::activate()
      *
      * Initializes the internal data structures (kd-tree,
      * emitter sampling data structures, etc.)
      */
-    void activate();
+	void activate();
 
-    /// Add a child object to the scene (meshes, integrators etc.)
-    void addChild(NoriObject *obj);
+	/// Add a child object to the scene (meshes, integrators etc.)
+	void addChild(NoriObject *obj);
 
-    /// Return a string summary of the scene (for debugging purposes)
-    std::string toString() const;
+	/// Return a string summary of the scene (for debugging purposes)
+	std::string toString() const;
 
-    EClassType getClassType() const { return EScene; }
+	EClassType getClassType() const { return EScene; }
+
 private:
-    std::vector<Mesh *> m_meshes;
-    Integrator *m_integrator = nullptr;
-    Sampler *m_sampler = nullptr;
-    Camera *m_camera = nullptr;
-    Accel *m_accel = nullptr;
+	void build();
+	bool rayIntersect(const Ray3f &ray, Intersection &its, bool shadowRay) const;
+
+	std::vector<Mesh *> m_meshes;
+	Integrator *m_integrator = nullptr;
+	Sampler *m_sampler = nullptr;
+	Camera *m_camera = nullptr;
+	Accel *m_accel = nullptr;
+
+	RTCScene m_scene = nullptr;  // Embree scene
+
+	// geomID --> Mesh
+	std::unordered_map<uint32_t, Mesh *> m_meshIDs;
 };
 
 NORI_NAMESPACE_END
