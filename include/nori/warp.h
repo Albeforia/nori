@@ -54,7 +54,7 @@ public:
     static Vector3f squareToUniformHemisphere(const Point2f &sample);
 
     /// Probability density of \ref squareToUniformHemisphere()
-    static float squareToUniformHemispherePdf(const Vector3f &v);
+	static float squareToUniformHemispherePdf(const Vector3f &v) { return INV_TWOPI; }
 
     /// Uniformly sample a vector on the unit hemisphere around the pole (0,0,1) with respect to projected solid angles
     static Vector3f squareToCosineHemisphere(const Point2f &sample);
