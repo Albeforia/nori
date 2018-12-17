@@ -16,6 +16,12 @@ public:
 	virtual ~Shape() {}
 
 	/**
+    @brief Return the type of object (i.e. Mesh/BSDF/etc.)
+	provided by this instance
+    */
+	virtual EClassType getClassType() const override { return EShape; }
+
+	/**
 	@brief Get the name of this shape
 	*/
 	const std::string& getName() const { return m_name; }

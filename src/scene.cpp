@@ -169,7 +169,7 @@ void Scene::build() {
 
 void Scene::addChild(NoriObject *obj) {
 	switch (obj->getClassType()) {
-	case EMesh: {
+	case EShape: {
 		Mesh *mesh = static_cast<Mesh *>(obj);
 		//m_accel->addMesh(mesh);
 		m_meshes.push_back(mesh);

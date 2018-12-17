@@ -162,7 +162,7 @@ public:
      * \brief Return the type of object (i.e. Mesh/BSDF/etc.)
      * provided by this instance
      * */
-    EClassType getClassType() const { return EMesh; }
+	//EClassType getClassType() const override { return EMesh; }
 
 protected:
     /// Create an empty mesh
