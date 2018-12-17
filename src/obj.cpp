@@ -29,7 +29,7 @@ NORI_NAMESPACE_BEGIN
  */
 class WavefrontOBJ : public Mesh {
 public:
-    WavefrontOBJ(const PropertyList &propList) {
+    WavefrontOBJ(const PropertyList &propList) : Mesh(propList) {
         typedef std::unordered_map<OBJVertex, uint32_t, OBJVertexHash> VertexMap;
 
         filesystem::path filename =

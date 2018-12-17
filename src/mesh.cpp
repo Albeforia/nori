@@ -25,7 +25,7 @@
 
 NORI_NAMESPACE_BEGIN
 
-Mesh::Mesh() { }
+Mesh::Mesh(const PropertyList &props) : Shape(props) {}
 
 Mesh::~Mesh() {
     delete m_bsdf;
@@ -131,12 +131,14 @@ std::string Mesh::toString() const {
         "  name = \"%s\",\n"
         "  vertexCount = %i,\n"
         "  triangleCount = %i,\n"
+        "  transform = %s,\n"
         "  bsdf = %s,\n"
         "  emitter = %s\n"
         "]",
         m_name,
         m_V.cols(),
         m_F.cols(),
+		indent(m_transform.toString()),
         m_bsdf ? indent(m_bsdf->toString()) : std::string("null"),
         m_emitter ? indent(m_emitter->toString()) : std::string("null")
     );

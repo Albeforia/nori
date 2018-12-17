@@ -89,6 +89,7 @@ add_executable(nori
   include/nori/rfilter.h
   include/nori/sampler.h
   include/nori/scene.h
+  include/nori/shape.h
   include/nori/timer.h
   include/nori/transform.h
   include/nori/vector.h
@@ -112,6 +113,7 @@ add_executable(nori
   src/proplist.cpp
   src/rfilter.cpp
   src/scene.cpp
+  src/shape.cpp
   src/ttest.cpp
   src/warp.cpp
   src/microfacet.cpp

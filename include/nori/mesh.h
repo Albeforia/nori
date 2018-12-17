@@ -18,9 +18,8 @@
 
 #pragma once
 
-#include <nori/object.h>
+#include <nori/shape.h>
 #include <nori/frame.h>
-#include <nori/bbox.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -71,8 +70,10 @@ struct Intersection {
  * the specifics of how to create its contents (e.g. by loading from an
  * external file)
  */
-class Mesh : public NoriObject {
+class Mesh : public Shape {
 public:
+	Mesh(const PropertyList &props);
+
     /// Release all memory
     virtual ~Mesh();
 
@@ -93,9 +94,6 @@ public:
 
     /// Return the surface area of the given triangle
     float surfaceArea(uint32_t index) const;
-
-    //// Return an axis-aligned bounding box of the entire mesh
-    const BoundingBox3f &getBoundingBox() const { return m_bbox; }
 
     //// Return an axis-aligned bounding box containing the given triangle
     BoundingBox3f getBoundingBox(uint32_t index) const;
@@ -157,9 +155,6 @@ public:
     /// Register a child object (e.g. a BSDF) with the mesh
     virtual void addChild(NoriObject *child);
 
-    /// Return the name of this mesh
-    const std::string &getName() const { return m_name; }
-
     /// Return a human-readable summary of this instance
     std::string toString() const;
 
@@ -171,17 +166,15 @@ public:
 
 protected:
     /// Create an empty mesh
-    Mesh();
+    //Mesh();
 
 protected:
-    std::string m_name;                  ///< Identifying name
     MatrixXf      m_V;                   ///< Vertex positions
     MatrixXf      m_N;                   ///< Vertex normals
     MatrixXf      m_UV;                  ///< Vertex texture coordinates
     MatrixXu      m_F;                   ///< Faces
     BSDF         *m_bsdf = nullptr;      ///< BSDF of the surface
     Emitter    *m_emitter = nullptr;     ///< Associated emitter, if any
-    BoundingBox3f m_bbox;                ///< Bounding box of the mesh
 };
 
 NORI_NAMESPACE_END
