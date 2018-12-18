@@ -38,7 +38,6 @@ public:
         std::ifstream is(filename.str());
         if (is.fail())
             throw NoriException("Unable to open OBJ file \"%s\"!", filename);
-        Transform trafo = propList.getTransform("toWorld", Transform());
 
         cout << "Loading \"" << filename << "\" .. ";
         cout.flush();
@@ -61,7 +60,7 @@ public:
             if (prefix == "v") {
                 Point3f p;
                 line >> p.x() >> p.y() >> p.z();
-                p = trafo * p;
+                p = m_transform * p;
                 m_bbox.expandBy(p);
                 positions.push_back(p);
             } else if (prefix == "vt") {
@@ -71,7 +70,7 @@ public:
             } else if (prefix == "vn") {
                 Normal3f n;
                 line >> n.x() >> n.y() >> n.z();
-                normals.push_back((trafo * n).normalized());
+                normals.push_back((m_transform * n).normalized());
             } else if (prefix == "f") {
                 std::string v1, v2, v3, v4;
                 line >> v1 >> v2 >> v3 >> v4;
