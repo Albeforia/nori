@@ -122,6 +122,8 @@ add_executable(nori
 
   src/integrators/normal.cpp
   src/integrators/av.cpp
+
+  src/shapes/sphere.cpp
 )
 
 add_definitions(${NANOGUI_EXTRA_DEFS})

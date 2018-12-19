@@ -48,7 +48,7 @@ bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) c
                 return true;
             ray.maxt = its.t = t;
             its.uv = Point2f(u, v);
-            its.mesh = m_mesh;
+            its.shape = m_mesh;
             f = idx;
             foundIntersection = true;
         }
@@ -67,7 +67,7 @@ bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) c
         bary << 1-its.uv.sum(), its.uv;
 
         /* References to all relevant mesh buffers */
-        const Mesh *mesh   = its.mesh;
+		const Mesh *mesh = static_cast<const Mesh *>(its.shape);
         const MatrixXf &V  = mesh->getVertexPositions();
         const MatrixXf &N  = mesh->getVertexNormals();
         const MatrixXf &UV = mesh->getVertexTexCoords();

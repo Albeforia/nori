@@ -2,8 +2,52 @@
 
 #include <nori/object.h>
 #include <nori/bbox.h>
+#include <nori/frame.h>
+#include <embree3/rtcore_ray.h>
 
 NORI_NAMESPACE_BEGIN
+
+class Shape;
+
+/**
+ * \brief Intersection data structure
+ *
+ * This data structure records local information about a ray-triangle intersection.
+ * This includes the position, traveled ray distance, uv coordinates, as well
+ * as well as two local coordinate frames (one that corresponds to the true
+ * geometry, and one that is used for shading computations).
+ */
+struct Intersection {
+	/// Position of the surface intersection
+	Point3f p;
+	/// Unoccluded distance along the ray
+	float t;
+	/// UV coordinates, if any
+	Point2f uv;
+	/// Shading frame (based on the shading normal)
+	Frame shFrame;
+	/// Geometric frame (based on the true geometry)
+	Frame geoFrame;
+	/// Pointer to the associated mesh
+	const Shape* shape;
+
+	/// Create an uninitialized intersection record
+	Intersection() :
+	    shape(nullptr) {}
+
+	/// Transform a direction vector into the local shading frame
+	Vector3f toLocal(const Vector3f& d) const {
+		return shFrame.toLocal(d);
+	}
+
+	/// Transform a direction vector from local to world coordinates
+	Vector3f toWorld(const Vector3f& d) const {
+		return shFrame.toWorld(d);
+	}
+
+	/// Return a human-readable summary of the intersection record
+	std::string toString() const;
+};
 
 /**
 @brief Base class of all shapes
@@ -35,6 +79,30 @@ public:
 	@brief Get the axis-aligned bounding box of this shape
 	*/
 	const BoundingBox3f& getBoundingBox() const { return m_bbox; }
+
+	/**
+	@brief Ray-shape intersection test
+
+	@param ray		The ray segment to be used for the intersection query
+	@param t		The distance from the ray origin to the intersection point if success
+	@param nomral	The surface normal at the intersection point
+	@param uv		The uv coordinates of the intersection point
+
+	@return			True if an intersection has been detected
+	*/
+	virtual bool rayIntersect(const Ray3f& ray, float& t,
+	                          Normal3f& normal, Vector2f& uv) const { return false; }
+
+	/**
+	@brief Fill the intersection data when the closest hit has been found
+
+	@param ray		The ray used for the intersection query
+	@param t		The ray parameter for the hit point
+	@param hit		The structure containing information about the hit point
+	@param its		The intersection data to be filled
+	*/
+	virtual void setHitInformation(const Ray3f& ray, const float& t, const RTCHit& hit,
+	                               Intersection& its) const {}
 
 protected:
 	std::string m_name;

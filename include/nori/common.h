@@ -265,4 +265,12 @@ extern float fresnel(float cosThetaI, float extIOR, float intIOR);
  */
 extern filesystem::resolver *getFileResolver();
 
+/*
+@brief Find solutions of the quadratic equation a*x^2 + b*x + c = 0
+
+@param	t0 The smaller real root, if exists
+@param	t1 The larger real root, if exists
+*/
+extern bool solveQuadratic(float a, float b, float c, float& t0, float& t1);
+
 NORI_NAMESPACE_END

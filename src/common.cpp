@@ -299,4 +299,21 @@ float fresnel(float cosThetaI, float extIOR, float intIOR) {
     return (Rs * Rs + Rp * Rp) / 2.0f;
 }
 
+bool solveQuadratic(float a, float b, float c, float &t0, float &t1) {
+	double discrim = b * b - 4 * a * c;
+	if (discrim < 0) return false;
+	double rootDiscrim = std::sqrt(discrim);
+	double q;
+	if (b < 0) {
+		q = -0.5 * (b - rootDiscrim);
+	}
+	else {
+		q = -0.5 * (b + rootDiscrim);
+	}
+	t0 = q / a;
+	t1 = c / q;
+	if (t0 > t1) std::swap(t0, t1);
+	return true;
+}
+
 NORI_NAMESPACE_END

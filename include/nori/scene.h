@@ -58,7 +58,7 @@ public:
 	Sampler *getSampler() { return m_sampler; }
 
 	/// Return a reference to an array containing all meshes
-	const std::vector<Mesh *> &getMeshes() const { return m_meshes; }
+	//const std::vector<Mesh *> &getMeshes() const { return m_meshes; }
 
 	/**
      * \brief Intersect a ray against all triangles stored in the scene
@@ -120,10 +120,15 @@ public:
 	EClassType getClassType() const { return EScene; }
 
 private:
+	struct ShapeData {
+		Shape *shape;
+		uint32_t geomID;
+	};
+
 	void build();
 	bool rayIntersect(const Ray3f &ray, Intersection &its, bool shadowRay) const;
 
-	std::vector<Mesh *> m_meshes;
+	std::vector<Shape *> m_shapes;
 	Integrator *m_integrator = nullptr;
 	Sampler *m_sampler = nullptr;
 	Camera *m_camera = nullptr;
@@ -131,8 +136,8 @@ private:
 
 	RTCScene m_scene = nullptr;  // Embree scene
 
-	// geomID --> Mesh
-	std::unordered_map<uint32_t, Mesh *> m_meshIDs;
+	// geomID --> ShapeData
+	std::unordered_map<uint32_t, ShapeData> m_shapeIDs;
 };
 
 NORI_NAMESPACE_END

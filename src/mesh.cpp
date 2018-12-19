@@ -87,6 +87,57 @@ bool Mesh::rayIntersect(uint32_t index, const Ray3f &ray, float &u, float &v, fl
     return t >= ray.mint && t <= ray.maxt;
 }
 
+void Mesh::setHitInformation(const Ray3f &ray, const float &t, const RTCHit &hit,
+                             Intersection &its) const {
+	its.shape = this;
+	its.t = t;
+
+	const MatrixXf &V = m_V;
+	const MatrixXf &N = m_N;
+	const MatrixXf &UV = m_UV;
+	const MatrixXu &F = m_F;
+
+	// vertices of the triangle
+	uint32_t idx0 = F(0, hit.primID),
+	         idx1 = F(1, hit.primID),
+	         idx2 = F(2, hit.primID);
+	Point3f p0 = V.col(idx0), p1 = V.col(idx1), p2 = V.col(idx2);
+
+	// compute the intersection position using barycentric coordinates
+	// https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/barycentric-coordinates
+	auto hit_w = 1 - hit.u - hit.v;
+	its.p = hit_w * p0 + hit.u * p1 + hit.v * p2;
+
+	// compute proper texture coordinates
+	if (UV.size() > 0) {
+		its.uv = hit_w * UV.col(idx0) + hit.u * UV.col(idx1) + hit.v * UV.col(idx2);
+	}
+	else {
+		its.uv = Point2f(hit.u, hit.v);
+	}
+
+	// compute the geometry frame
+	its.geoFrame = Frame((p1 - p0).cross(p2 - p0).normalized());
+
+	// compute the shading frame
+	if (N.size() > 0) {
+		/* Note that for simplicity,
+               the current implementation doesn't attempt to provide
+               tangents that are continuous across the surface. That
+               means that this code will need to be modified to be able
+               use anisotropic BRDFs, which need tangent continuity */
+
+		its.shFrame = Frame(
+		  (hit_w * N.col(idx0) +
+		   hit.u * N.col(idx1) +
+		   hit.v * N.col(idx2))
+		    .normalized());
+	}
+	else {
+		its.shFrame = its.geoFrame;
+	}
+}
+
 BoundingBox3f Mesh::getBoundingBox(uint32_t index) const {
     BoundingBox3f result(m_V.col(m_F(0, index)));
     result.expandBy(m_V.col(m_F(1, index)));
@@ -131,7 +182,8 @@ std::string Mesh::toString() const {
         "  name = \"%s\",\n"
         "  vertexCount = %i,\n"
         "  triangleCount = %i,\n"
-        "  transform = %s,\n"
+		"  transform = %s,\n"
+		"  aabb = %s,\n"
         "  bsdf = %s,\n"
         "  emitter = %s\n"
         "]",
@@ -139,13 +191,14 @@ std::string Mesh::toString() const {
         m_V.cols(),
         m_F.cols(),
 		indent(m_transform.toString()),
+		indent(m_bbox.toString()),
         m_bsdf ? indent(m_bsdf->toString()) : std::string("null"),
         m_emitter ? indent(m_emitter->toString()) : std::string("null")
     );
 }
 
 std::string Intersection::toString() const {
-    if (!mesh)
+    if (!shape)
         return "Intersection[invalid]";
 
     return tfm::format(
@@ -155,14 +208,14 @@ std::string Intersection::toString() const {
         "  uv = %s,\n"
         "  shFrame = %s,\n"
         "  geoFrame = %s,\n"
-        "  mesh = %s\n"
+        "  shape = %s\n"
         "]",
         p.toString(),
         t,
         uv.toString(),
         indent(shFrame.toString()),
         indent(geoFrame.toString()),
-        mesh ? mesh->toString() : std::string("null")
+        shape ? shape->toString() : std::string("null")
     );
 }
 

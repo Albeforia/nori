@@ -69,55 +69,7 @@ bool Scene::rayIntersect(const Ray3f &ray, Intersection &its, bool shadowRay) co
 
 	auto &hit = rayhit.hit;
 	if (hit.geomID != RTC_INVALID_GEOMETRY_ID) {
-		its.t = rayhit.ray.tfar;
-
-		// hit a mesh
-		its.mesh = m_meshIDs.at(hit.geomID);
-		const MatrixXf &V = its.mesh->getVertexPositions();
-		const MatrixXf &N = its.mesh->getVertexNormals();
-		const MatrixXf &UV = its.mesh->getVertexTexCoords();
-		const MatrixXu &F = its.mesh->getIndices();
-
-		// vertices of the triangle
-		uint32_t idx0 = F(0, hit.primID),
-		         idx1 = F(1, hit.primID),
-		         idx2 = F(2, hit.primID);
-		Point3f p0 = V.col(idx0), p1 = V.col(idx1), p2 = V.col(idx2);
-
-		// compute the intersection position using barycentric coordinates
-		// https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/barycentric-coordinates
-		auto hit_w = 1 - hit.u - hit.v;
-		its.p = hit_w * p0 + hit.u * p1 + hit.v * p2;
-
-		// compute proper texture coordinates
-		if (UV.size() > 0) {
-			its.uv = hit_w * UV.col(idx0) + hit.u * UV.col(idx1) + hit.v * UV.col(idx2);
-		}
-		else {
-			its.uv = Point2f(hit.u, hit.v);
-		}
-
-		// compute the geometry frame
-		its.geoFrame = Frame((p1 - p0).cross(p2 - p0).normalized());
-
-		// compute the shading frame
-		if (N.size() > 0) {
-			/* Note that for simplicity,
-               the current implementation doesn't attempt to provide
-               tangents that are continuous across the surface. That
-               means that this code will need to be modified to be able
-               use anisotropic BRDFs, which need tangent continuity */
-
-			its.shFrame = Frame(
-			  (hit_w * N.col(idx0) +
-			   hit.u * N.col(idx1) +
-			   hit.v * N.col(idx2))
-			    .normalized());
-		}
-		else {
-			its.shFrame = its.geoFrame;
-		}
-
+		m_shapeIDs.at(hit.geomID).shape->setHitInformation(ray, rayhit.ray.tfar, rayhit.hit, its);
 		return true;
 	}
 
@@ -150,18 +102,88 @@ void Scene::activate() {
 }
 
 void Scene::build() {
-	for (auto mesh : m_meshes) {
-		auto geom = rtcNewGeometry(EmbreeDevice::instance().device(), RTC_GEOMETRY_TYPE_TRIANGLE);
-		rtcSetSharedGeometryBuffer(geom, RTC_BUFFER_TYPE_VERTEX, 0,
-		                           RTC_FORMAT_FLOAT3, mesh->getVertexPositions().data(),
-		                           0, sizeof(Eigen::Vector3f), mesh->getVertexCount());
-		rtcSetSharedGeometryBuffer(geom, RTC_BUFFER_TYPE_INDEX, 0,
-		                           RTC_FORMAT_UINT3, mesh->getIndices().data(),
-		                           0, sizeof(Eigen::Vector3i), mesh->getTriangleCount());
-		rtcCommitGeometry(geom);
-		auto geomID = rtcAttachGeometry(m_scene, geom);
-		m_meshIDs[geomID] = mesh;
-		rtcReleaseGeometry(geom);
+	for (auto shape : m_shapes) {
+		if (auto mesh = dynamic_cast<Mesh *>(shape)) {
+			auto geom = rtcNewGeometry(EmbreeDevice::instance().device(), RTC_GEOMETRY_TYPE_TRIANGLE);
+			rtcSetSharedGeometryBuffer(geom, RTC_BUFFER_TYPE_VERTEX, 0,
+			                           RTC_FORMAT_FLOAT3, mesh->getVertexPositions().data(),
+			                           0, sizeof(Eigen::Vector3f), mesh->getVertexCount());
+			rtcSetSharedGeometryBuffer(geom, RTC_BUFFER_TYPE_INDEX, 0,
+			                           RTC_FORMAT_UINT3, mesh->getIndices().data(),
+			                           0, sizeof(Eigen::Vector3i), mesh->getTriangleCount());
+			rtcCommitGeometry(geom);
+			auto geomID = rtcAttachGeometry(m_scene, geom);
+			m_shapeIDs[geomID] = ShapeData{shape, geomID};
+			rtcReleaseGeometry(geom);
+		}
+		else {
+			auto geom = rtcNewGeometry(EmbreeDevice::instance().device(), RTC_GEOMETRY_TYPE_USER);
+			auto geomID = rtcAttachGeometry(m_scene, geom);
+			m_shapeIDs[geomID] = ShapeData{shape, geomID};
+			rtcSetGeometryUserPrimitiveCount(geom, 1);
+			rtcSetGeometryUserData(geom, &(m_shapeIDs.at(geomID)));
+			rtcSetGeometryBoundsFunction(geom,
+			                             [](const RTCBoundsFunctionArguments *args) {
+				                             auto shape = ((ShapeData *)args->geometryUserPtr)->shape;
+				                             auto &aabb = shape->getBoundingBox();
+				                             args->bounds_o->lower_x = aabb.min.x();
+				                             args->bounds_o->lower_y = aabb.min.y();
+				                             args->bounds_o->lower_z = aabb.min.z();
+				                             args->bounds_o->upper_x = aabb.max.x();
+				                             args->bounds_o->upper_y = aabb.max.y();
+				                             args->bounds_o->upper_z = aabb.max.z();
+			                             },
+			                             nullptr);
+			rtcSetGeometryIntersectFunction(geom,
+			                                [](const RTCIntersectFunctionNArguments *args) {
+				                                auto valid = args->valid;
+				                                if (!valid[0]) return;
+
+				                                auto shape = ((ShapeData *)args->geometryUserPtr)->shape;
+				                                auto &rayhit = *(RTCRayHit *)(args->rayhit);
+
+				                                Ray3f ray(Point3f(rayhit.ray.org_x, rayhit.ray.org_y, rayhit.ray.org_z),
+				                                          Vector3f(rayhit.ray.dir_x, rayhit.ray.dir_y, rayhit.ray.dir_z),
+				                                          rayhit.ray.tnear, rayhit.ray.tfar);
+
+				                                float t;
+				                                Normal3f normal;
+				                                Vector2f uv;
+				                                if (shape->rayIntersect(ray, t, normal, uv)) {
+					                                rayhit.ray.tfar = t;
+
+					                                rayhit.hit.u = uv.x();
+					                                rayhit.hit.v = uv.y();
+					                                rayhit.hit.Ng_x = normal.x();
+					                                rayhit.hit.Ng_y = normal.y();
+					                                rayhit.hit.Ng_z = normal.z();
+					                                rayhit.hit.instID[0] = args->context->instID[0];
+					                                rayhit.hit.geomID = ((ShapeData *)args->geometryUserPtr)->geomID;
+					                                rayhit.hit.primID = args->primID;
+				                                }
+			                                });
+			rtcSetGeometryOccludedFunction(geom,
+			                               [](const RTCOccludedFunctionNArguments *args) {
+				                               auto valid = args->valid;
+				                               if (!valid[0]) return;
+
+				                               auto shape = ((ShapeData *)args->geometryUserPtr)->shape;
+				                               auto &rtcRay = *(RTCRay *)(args->ray);
+
+				                               Ray3f ray(Point3f(rtcRay.org_x, rtcRay.org_y, rtcRay.org_z),
+				                                         Vector3f(rtcRay.dir_x, rtcRay.dir_y, rtcRay.dir_z),
+				                                         rtcRay.tnear, rtcRay.tfar);
+
+				                               float t;
+				                               Normal3f normal;
+				                               Vector2f uv;
+				                               if (shape->rayIntersect(ray, t, normal, uv)) {
+					                               rtcRay.tfar = -std::numeric_limits<float>::infinity();
+				                               }
+			                               });
+			rtcCommitGeometry(geom);
+			rtcReleaseGeometry(geom);
+		}
 	}
 
 	rtcCommitScene(m_scene);
@@ -170,9 +192,9 @@ void Scene::build() {
 void Scene::addChild(NoriObject *obj) {
 	switch (obj->getClassType()) {
 	case EShape: {
-		Mesh *mesh = static_cast<Mesh *>(obj);
+		auto shape = static_cast<Shape *>(obj);
 		//m_accel->addMesh(mesh);
-		m_meshes.push_back(mesh);
+		m_shapes.push_back(shape);
 	} break;
 
 	case EEmitter: {
@@ -206,12 +228,12 @@ void Scene::addChild(NoriObject *obj) {
 }
 
 std::string Scene::toString() const {
-	std::string meshes;
-	for (size_t i = 0; i < m_meshes.size(); ++i) {
-		meshes += std::string("  ") + indent(m_meshes[i]->toString(), 2);
-		if (i + 1 < m_meshes.size())
-			meshes += ",";
-		meshes += "\n";
+	std::string shapes;
+	for (size_t i = 0; i < m_shapes.size(); ++i) {
+		shapes += std::string("  ") + indent(m_shapes[i]->toString(), 2);
+		if (i + 1 < m_shapes.size())
+			shapes += ",";
+		shapes += "\n";
 	}
 
 	return tfm::format(
@@ -219,13 +241,13 @@ std::string Scene::toString() const {
 	  "  integrator = %s,\n"
 	  "  sampler = %s\n"
 	  "  camera = %s,\n"
-	  "  meshes = {\n"
+	  "  shapes = {\n"
 	  "  %s  }\n"
 	  "]",
 	  indent(m_integrator->toString()),
 	  indent(m_sampler->toString()),
 	  indent(m_camera->toString()),
-	  indent(meshes, 2));
+	  indent(shapes, 2));
 }
 
 NORI_REGISTER_CLASS(Scene, "scene");
