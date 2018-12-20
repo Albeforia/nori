@@ -29,6 +29,7 @@ struct Intersection;
 */
 struct EmitterQueryRecord {
 	Vector3f wi;
+	float distance;
 	float pdf;
 };
 

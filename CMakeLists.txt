@@ -122,6 +122,7 @@ add_executable(nori
 
   src/integrators/normal.cpp
   src/integrators/av.cpp
+  src/integrators/direct.cpp
 
   src/shapes/sphere.cpp
 

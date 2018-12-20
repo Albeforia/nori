@@ -60,6 +60,9 @@ public:
 	/// Return a reference to an array containing all meshes
 	//const std::vector<Mesh *> &getMeshes() const { return m_meshes; }
 
+	/// Return a reference to an array containing all emitters
+	const std::vector<Emitter *> &getEmitters() const { return m_emitters; }
+
 	/**
      * \brief Intersect a ray against all triangles stored in the scene
      * and return detailed intersection information

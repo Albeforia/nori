@@ -12,12 +12,21 @@ public:
 	PointEmitter(const PropertyList& props) :
 	    Emitter(EEmitterType::EDeltaPosition) {
 		m_position = props.getPoint("position", Point3f{});
-		m_power = props.getColor("power", 15.0f);
+		m_power = props.getColor("power", 4 * M_PI);
 	}
 
+	/*
+	For point lights, we are actually sampling a delta distribution.
+	The function always returns a single direction instead of using random samples.
+	The delta distributions exist both in the Ld and pdf and they cancel out in the
+	MC estimator of the LTE. Or we could consider the integral involving delta having
+	analytic solution.
+	Either way, the pdf is useless, so we set it to 1.
+	*/
 	virtual Color3f sample(EmitterQueryRecord& eRec, const Intersection& ref) const override {
 		eRec.wi = (m_position - ref.p);
 		float dist = eRec.wi.norm();
+		eRec.distance = dist;
 		eRec.wi /= dist;
 		eRec.pdf = 1.0f;
 
