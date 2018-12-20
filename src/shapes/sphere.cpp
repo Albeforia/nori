@@ -49,7 +49,20 @@ public:
 		}
 
 		auto localHit = localRay(t);
-		Normal3f localNormal = localHit.normalized();
+		auto dist = localHit.norm();
+		localHit *= m_radius / dist;  // refine to be closer to the surface
+
+		// find parametric representation of sphere hit
+		if (localHit.x() == 0 && localHit.y() == 0) {
+			localHit.x() = 1e-5f * m_radius;
+		}
+		auto phi = std::atan2(localHit.y(), localHit.x());
+		if (phi < 0) phi += 2 * M_PI;
+		auto theta = std::acos(clamp(localHit.z() / m_radius, -1.0f, 1.0f));
+		uv.x() = phi / 2 * M_PI;
+		uv.y() = theta / M_PI;
+
+		Normal3f localNormal = localHit / dist;
 		normal = m_transform * localNormal;
 
 		return true;
@@ -59,7 +72,8 @@ public:
 	                       Intersection& its) const override {
 		its.t = t;
 		its.p = ray(t);
-		// TODO calculate uv
+		its.uv.x() = hit.u;
+		its.uv.y() = hit.v;
 		its.geoFrame = Frame(Vector3f(hit.Ng_x, hit.Ng_y, hit.Ng_z));
 		its.shFrame = its.geoFrame;
 		its.shape = this;
