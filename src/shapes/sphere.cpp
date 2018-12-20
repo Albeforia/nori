@@ -1,4 +1,6 @@
 #include <nori/shape.h>
+#include <nori/bsdf.h>
+#include <nori/emitter.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -84,11 +86,15 @@ public:
 		  "Sphere[\n"
 		  "  radius = %f,\n"
 		  "  transform = %s,\n"
-		  "  aabb = %s\n"
+		  "  aabb = %s,\n"
+		  "  bsdf = %s,\n"
+		  "  emitter = %s\n"
 		  "]",
 		  m_radius,
 		  indent(m_transform.toString()),
-		  indent(m_bbox.toString()));
+		  indent(m_bbox.toString()),
+		  m_bsdf ? indent(m_bsdf->toString()) : std::string("null"),
+		  m_emitter ? indent(m_emitter->toString()) : std::string("null"));
 	}
 
 private:

@@ -37,9 +37,6 @@ public:
     /// Release all memory
     virtual ~Mesh();
 
-    /// Initialize internal data structures (called once by the XML parser)
-    virtual void activate();
-
     /// Return the total number of triangles in this shape
     uint32_t getTriangleCount() const { return (uint32_t) m_F.cols(); }
 
@@ -100,21 +97,6 @@ public:
     /// Return a pointer to the triangle vertex index list
     const MatrixXu &getIndices() const { return m_F; }
 
-    /// Is this mesh an area emitter?
-    bool isEmitter() const { return m_emitter != nullptr; }
-
-    /// Return a pointer to an attached area emitter instance
-    Emitter *getEmitter() { return m_emitter; }
-
-    /// Return a pointer to an attached area emitter instance (const version)
-    const Emitter *getEmitter() const { return m_emitter; }
-
-    /// Return a pointer to the BSDF associated with this mesh
-    const BSDF *getBSDF() const { return m_bsdf; }
-
-    /// Register a child object (e.g. a BSDF) with the mesh
-    virtual void addChild(NoriObject *child);
-
     /// Return a human-readable summary of this instance
     std::string toString() const;
 
@@ -136,8 +118,7 @@ protected:
     MatrixXf      m_N;                   ///< Vertex normals
     MatrixXf      m_UV;                  ///< Vertex texture coordinates
     MatrixXu      m_F;                   ///< Faces
-    BSDF         *m_bsdf = nullptr;      ///< BSDF of the surface
-    Emitter    *m_emitter = nullptr;     ///< Associated emitter, if any
+
 };
 
 NORI_NAMESPACE_END

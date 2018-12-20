@@ -27,18 +27,7 @@ NORI_NAMESPACE_BEGIN
 
 Mesh::Mesh(const PropertyList &props) : Shape(props) {}
 
-Mesh::~Mesh() {
-    delete m_bsdf;
-    delete m_emitter;
-}
-
-void Mesh::activate() {
-    if (!m_bsdf) {
-        /* If no material was assigned, instantiate a diffuse BRDF */
-        m_bsdf = static_cast<BSDF *>(
-            NoriObjectFactory::createInstance("diffuse", PropertyList()));
-    }
-}
+Mesh::~Mesh() {}
 
 float Mesh::surfaceArea(uint32_t index) const {
     uint32_t i0 = m_F(0, index), i1 = m_F(1, index), i2 = m_F(2, index);
@@ -150,30 +139,6 @@ Point3f Mesh::getCentroid(uint32_t index) const {
         (m_V.col(m_F(0, index)) +
          m_V.col(m_F(1, index)) +
          m_V.col(m_F(2, index)));
-}
-
-void Mesh::addChild(NoriObject *obj) {
-    switch (obj->getClassType()) {
-        case EBSDF:
-            if (m_bsdf)
-                throw NoriException(
-                    "Mesh: tried to register multiple BSDF instances!");
-            m_bsdf = static_cast<BSDF *>(obj);
-            break;
-
-        case EEmitter: {
-                Emitter *emitter = static_cast<Emitter *>(obj);
-                if (m_emitter)
-                    throw NoriException(
-                        "Mesh: tried to register multiple Emitter instances!");
-                m_emitter = emitter;
-            }
-            break;
-
-        default:
-            throw NoriException("Mesh::addChild(<%s>) is not supported!",
-                                classTypeName(obj->getClassType()));
-    }
 }
 
 std::string Mesh::toString() const {

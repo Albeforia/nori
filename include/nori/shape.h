@@ -57,7 +57,7 @@ class Shape : public NoriObject {
 public:
 	Shape(const PropertyList& props);
 
-	virtual ~Shape() {}
+	virtual ~Shape();
 
 	/**
     @brief Return the type of object (i.e. Mesh/BSDF/etc.)
@@ -79,6 +79,24 @@ public:
 	@brief Get the axis-aligned bounding box of this shape
 	*/
 	const BoundingBox3f& getBoundingBox() const { return m_bbox; }
+
+	/// Is this mesh an area emitter?
+	bool isEmitter() const { return m_emitter != nullptr; }
+
+	/// Return a pointer to an attached area emitter instance
+	Emitter* getEmitter() { return m_emitter; }
+
+	/// Return a pointer to an attached area emitter instance (const version)
+	const Emitter* getEmitter() const { return m_emitter; }
+
+	/// Return a pointer to the BSDF associated with this mesh
+	const BSDF* getBSDF() const { return m_bsdf; }
+
+	/// Register a child object (e.g. a BSDF) with the shape
+	virtual void addChild(NoriObject* child) override;
+
+	/// Initialize internal data structures (called once by the XML parser)
+	virtual void activate() override;
 
 	/**
 	@brief Ray-shape intersection test
@@ -110,6 +128,9 @@ protected:
 	Transform m_transform;
 
 	BoundingBox3f m_bbox;
+
+	BSDF* m_bsdf = nullptr;        ///< BSDF of the surface
+	Emitter* m_emitter = nullptr;  ///< Associated emitter, if any
 };
 
 NORI_NAMESPACE_END
