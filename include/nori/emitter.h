@@ -22,17 +22,61 @@
 
 NORI_NAMESPACE_BEGIN
 
+struct Intersection;
+
+/*
+@brief Convenience data structure for sampling a emitter
+*/
+struct EmitterQueryRecord {
+	Vector3f wi;
+	float pdf;
+};
+
 /**
  * \brief Superclass of all emitters
  */
 class Emitter : public NoriObject {
 public:
+	/*
+	@brief Type flags for Emitter
+	*/
+	enum EEmitterType {
+		EDeltaPosition = 1,
+		EDeltaDirection = 2,
+		EArea = 4,
+		EInfinite = 8
+	};
 
-    /**
+	/*
+	@brief Constructor
+	*/
+	Emitter(uint32_t flags) :
+	    m_typeFlags{flags} {}
+
+	/**
      * \brief Return the type of object (i.e. Mesh/Emitter/etc.) 
      * provided by this instance
      * */
-    EClassType getClassType() const { return EEmitter; }
+	EClassType getClassType() const { return EEmitter; }
+
+	/*
+	@brief Check the type of the emitter
+	*/
+	bool isType(EEmitterType type) const { return (m_typeFlags & (int)type) != 0; }
+
+	/*
+	@brief Sample the emitter.
+
+	@param eRec	A record with detailed information to be filled
+	@param ref	A reference point on the surface 
+
+	@return The radiance arriving at the reference point from the emitter,
+	assuming there is no occlusion between the emitter and the point
+	*/
+	virtual Color3f sample(EmitterQueryRecord& eRec, const Intersection& ref) const = 0;
+
+private:
+	uint32_t m_typeFlags;
 };
 
 NORI_NAMESPACE_END

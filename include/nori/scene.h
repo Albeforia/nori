@@ -129,6 +129,7 @@ private:
 	bool rayIntersect(const Ray3f &ray, Intersection &its, bool shadowRay) const;
 
 	std::vector<Shape *> m_shapes;
+	std::vector<Emitter *> m_emitters;
 	Integrator *m_integrator = nullptr;
 	Sampler *m_sampler = nullptr;
 	Camera *m_camera = nullptr;

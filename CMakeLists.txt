@@ -124,6 +124,8 @@ add_executable(nori
   src/integrators/av.cpp
 
   src/shapes/sphere.cpp
+
+  src/emitters/point.cpp
 )
 
 add_definitions(${NANOGUI_EXTRA_DEFS})
