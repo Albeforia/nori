@@ -65,6 +65,7 @@ NoriObject *loadFromXML(const std::string &filename) {
         ECamera               = NoriObject::ECamera,
         EIntegrator           = NoriObject::EIntegrator,
         ESampler              = NoriObject::ESampler,
+		ETexture			  = NoriObject::ETexture,
         ETest                 = NoriObject::ETest,
         EReconstructionFilter = NoriObject::EReconstructionFilter,
 
@@ -97,6 +98,7 @@ NoriObject *loadFromXML(const std::string &filename) {
     tags["phase"]      = EPhaseFunction;
     tags["integrator"] = EIntegrator;
     tags["sampler"]    = ESampler;
+    tags["texture"]    = ETexture;
     tags["rfilter"]    = EReconstructionFilter;
     tags["test"]       = ETest;
     tags["boolean"]    = EBoolean;
@@ -117,9 +119,10 @@ NoriObject *loadFromXML(const std::string &filename) {
     auto check_attributes = [&](const pugi::xml_node &node, std::set<std::string> attrs) {
         for (auto attr : node.attributes()) {
             auto it = attrs.find(attr.name());
-            if (it == attrs.end())
-                throw NoriException("Error while parsing \"%s\": unexpected attribute \"%s\" in \"%s\" at %s",
-                                    filename, attr.name(), node.name(), offset(node.offset_debug()));
+			if (it == attrs.end())
+				//throw NoriException("Error while parsing \"%s\": unexpected attribute \"%s\" in \"%s\" at %s",
+				//                    filename, attr.name(), node.name(), offset(node.offset_debug()));
+				continue;
             attrs.erase(it);
         }
         if (!attrs.empty())
@@ -174,11 +177,12 @@ NoriObject *loadFromXML(const std::string &filename) {
             transform.setIdentity();
 
         PropertyList propList;
-        std::vector<NoriObject *> children;
+		//std::vector<NoriObject *> children;
+		std::vector<std::tuple<std::string, NoriObject *>> children;
         for (pugi::xml_node &ch: node.children()) {
             NoriObject *child = parseTag(ch, propList, tag);
             if (child)
-                children.push_back(child);
+				children.emplace_back(ch.attribute("name").value(), child);
         }
 
         NoriObject *result = nullptr;
@@ -203,8 +207,8 @@ NoriObject *loadFromXML(const std::string &filename) {
 
                 /* Add all children */
                 for (auto ch: children) {
-					result->addChild(node.attribute("name").value(), ch);
-                    ch->setParent(result);
+					result->addChild(std::get<0>(ch), std::get<1>(ch));
+					std::get<1>(ch)->setParent(result);
                 }
 
                 /* Activate / configure the object */
