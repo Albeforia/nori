@@ -39,6 +39,8 @@ public:
         if (is.fail())
             throw NoriException("Unable to open OBJ file \"%s\"!", filename);
 
+		bool flipTexCoords = propList.getBoolean("flipTexCoords", true);
+
         cout << "Loading \"" << filename << "\" .. ";
         cout.flush();
         Timer timer;
@@ -66,6 +68,8 @@ public:
             } else if (prefix == "vt") {
                 Point2f tc;
                 line >> tc.x() >> tc.y();
+				if (flipTexCoords)
+					tc.y() = 1 - tc.y();
                 texcoords.push_back(tc);
             } else if (prefix == "vn") {
                 Normal3f n;

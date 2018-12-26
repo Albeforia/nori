@@ -147,6 +147,8 @@ std::string Mesh::toString() const {
         "  name = \"%s\",\n"
         "  vertexCount = %i,\n"
         "  triangleCount = %i,\n"
+        "  hasUV = %s,\n"
+        "  hasNormal = %s,\n"
 		"  transform = %s,\n"
 		"  aabb = %s,\n"
         "  bsdf = %s,\n"
@@ -155,6 +157,8 @@ std::string Mesh::toString() const {
         m_name,
         m_V.cols(),
         m_F.cols(),
+		m_UV.size() > 0 ? "yes" : "no",
+		m_N.size() > 0 ? "yes" : "no",
 		indent(m_transform.toString()),
 		indent(m_bbox.toString()),
         m_bsdf ? indent(m_bsdf->toString()) : std::string("null"),
