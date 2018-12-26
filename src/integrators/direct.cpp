@@ -38,7 +38,8 @@ public:
 				Ld = Color3f(0.0f);
 			}
 
-			estimation += (Ld * bsdfVal * its.shFrame.n.dot(eRec.wi)) / eRec.pdf;
+			float cosThetai = clamp(its.shFrame.n.dot(eRec.wi), 0.0f, 1.0f);
+			estimation += (Ld * bsdfVal * cosThetai) / eRec.pdf;
 		}
 
 		return estimation;
