@@ -130,6 +130,7 @@ add_executable(nori
   src/emitters/point.cpp
 
   src/textures/constexture.cpp
+  src/textures/checkerboard.cpp
 )
 
 add_definitions(${NANOGUI_EXTRA_DEFS})
