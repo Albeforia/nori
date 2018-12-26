@@ -14,9 +14,9 @@ public:
 	    Shape(props) {
 		m_radius = props.getFloat("radius", 1.0f);
 
-		Point3f center = (m_transform.getMatrix().col(3)).head<3>();
-		m_bbox.min = center + Vector3f(-m_radius);
-		m_bbox.max = center + Vector3f(m_radius);
+		m_center = (m_transform.getMatrix().col(3)).head<3>();
+		m_bbox.min = m_center + Vector3f(-m_radius);
+		m_bbox.max = m_center + Vector3f(m_radius);
 	}
 
 	bool rayIntersect(const Ray3f& ray, float& t,
@@ -50,23 +50,6 @@ public:
 			t = t0;
 		}
 
-		auto localHit = localRay(t);
-		auto dist = localHit.norm();
-		localHit *= m_radius / dist;  // refine to be closer to the surface
-
-		// find parametric representation of sphere hit
-		if (localHit.x() == 0 && localHit.y() == 0) {
-			localHit.x() = 1e-5f * m_radius;
-		}
-		auto phi = std::atan2(localHit.y(), localHit.x());
-		if (phi < 0) phi += 2 * M_PI;
-		auto theta = std::acos(clamp(localHit.z() / m_radius, -1.0f, 1.0f));
-		uv.x() = phi / 2 * M_PI;
-		uv.y() = theta / M_PI;
-
-		Normal3f localNormal = localHit / dist;
-		normal = m_transform * localNormal;
-
 		return true;
 	}
 
@@ -74,9 +57,24 @@ public:
 	                       Intersection& its) const override {
 		its.t = t;
 		its.p = ray(t);
-		its.uv.x() = hit.u;
-		its.uv.y() = hit.v;
-		its.geoFrame = Frame(Vector3f(hit.Ng_x, hit.Ng_y, hit.Ng_z));
+
+		Vector3f hitdir = (its.p - m_center).normalized();
+
+		// refine to be closer to the surface
+		its.p = m_center + hitdir * m_radius;
+
+		// find parametric representation of sphere hit
+		auto localHit = m_transform.inverse() * Vector3f(its.p - m_center);
+		if (localHit.x() == 0 && localHit.y() == 0) {
+			localHit.x() = 1e-5f * m_radius;
+		}
+		auto phi = std::atan2(localHit.y(), localHit.x());
+		if (phi < 0) phi += 2 * M_PI;
+		auto theta = std::acos(clamp(localHit.z() / m_radius, -1.0f, 1.0f));
+		its.uv.x() = phi * 0.5f * INV_PI;
+		its.uv.y() = theta * INV_PI;
+
+		its.geoFrame = Frame(hitdir);
 		its.shFrame = its.geoFrame;
 		its.shape = this;
 	}
@@ -99,6 +97,7 @@ public:
 
 private:
 	float m_radius;
+	Point3f m_center;
 };
 
 NORI_REGISTER_CLASS(Sphere, "sphere");
