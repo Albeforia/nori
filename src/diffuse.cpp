@@ -17,6 +17,7 @@
 */
 
 #include <nori/bsdf.h>
+#include <nori/texture.h>
 #include <nori/frame.h>
 #include <nori/warp.h>
 
@@ -28,8 +29,12 @@ NORI_NAMESPACE_BEGIN
 class Diffuse : public BSDF {
 public:
     Diffuse(const PropertyList &propList) {
-        m_albedo = propList.getColor("albedo", Color3f(0.5f));
+        //m_albedo = propList.getColor("albedo", Color3f(0.5f));
     }
+
+	~Diffuse() {
+		delete m_albedo;
+	}
 
     /// Evaluate the BRDF model
     Color3f eval(const BSDFQueryRecord &bRec) const {
@@ -41,7 +46,7 @@ public:
             return Color3f(0.0f);
 
         /* The BRDF is simply the albedo / pi */
-        return m_albedo * INV_PI;
+        return m_albedo->eval(bRec.uv) * INV_PI;
     }
 
     /// Compute the density of \ref sample() wrt. solid angles
@@ -79,24 +84,49 @@ public:
 
         /* eval() / pdf() * cos(theta) = albedo. There
            is no need to call these functions. */
-        return m_albedo;
+		return m_albedo->eval(bRec.uv);
     }
 
     bool isDiffuse() const {
         return true;
     }
 
+	void activate() {
+		if (!m_albedo) {
+			m_albedo = static_cast<Texture2D<Color3f> *>(
+			  NoriObjectFactory::createInstance("constexture", PropertyList{}));
+		}
+	}
+
+	void addChild(const std::string &name, NoriObject *obj) {
+		switch (obj->getClassType()) {
+		case ETexture:
+			if (name == "albedo") {
+				if (m_albedo)
+					throw NoriException(
+					  "Diffuse: tried to register multiple Texture instances!");
+				m_albedo = static_cast<Texture2D<Color3f> *>(obj);
+			}
+			break;
+
+		default:
+			throw NoriException("Diffuse::addChild(<%s>) is not supported!",
+								classTypeName(obj->getClassType()));
+		}	
+	}
+
     /// Return a human-readable summary
     std::string toString() const {
-        return tfm::format(
-            "Diffuse[\n"
-            "  albedo = %s\n"
-            "]", m_albedo.toString());
+		return tfm::format(
+		  "Diffuse[\n"
+		  "  albedo = %s\n"
+		  "]",
+		  indent(m_albedo->toString()));
     }
 
     EClassType getClassType() const { return EBSDF; }
 private:
-    Color3f m_albedo;
+	Texture2D<Color3f> *m_albedo = nullptr;
 };
 
 NORI_REGISTER_CLASS(Diffuse, "diffuse");

@@ -28,7 +28,8 @@ public:
 			auto Ld = emitter->sample(eRec, its);
 
 			auto bsdf = its.shape->getBSDF();
-			BSDFQueryRecord bRec(its.toLocal(eRec.wi), its.toLocal(-ray.d), EMeasure::ESolidAngle);
+			BSDFQueryRecord bRec(its.toLocal(eRec.wi), its.toLocal(-ray.d),
+			                     EMeasure::ESolidAngle, its.uv);
 			auto bsdfVal = bsdf->eval(bRec);
 
 			// test visibility

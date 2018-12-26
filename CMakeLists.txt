@@ -90,6 +90,7 @@ add_executable(nori
   include/nori/sampler.h
   include/nori/scene.h
   include/nori/shape.h
+  include/nori/texture.h
   include/nori/timer.h
   include/nori/transform.h
   include/nori/vector.h
@@ -127,6 +128,8 @@ add_executable(nori
   src/shapes/sphere.cpp
 
   src/emitters/point.cpp
+
+  src/textures/constexture.cpp
 )
 
 add_definitions(${NANOGUI_EXTRA_DEFS})
