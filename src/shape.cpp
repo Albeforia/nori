@@ -21,7 +21,7 @@ void Shape::activate() {
 	}
 }
 
-void Shape::addChild(NoriObject *obj) {
+void Shape::addChild(const std::string &name, NoriObject *obj) {
 	switch (obj->getClassType()) {
 	case EBSDF:
 		if (m_bsdf)

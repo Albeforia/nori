@@ -41,6 +41,7 @@ public:
         ECamera,
         EIntegrator,
         ESampler,
+		ETexture,
         ETest,
         EReconstructionFilter,
         EClassTypeCount
@@ -61,7 +62,7 @@ public:
      * The default implementation does not support children and
      * simply throws an exception
      */
-    virtual void addChild(NoriObject *child);
+	virtual void addChild(const std::string &name, NoriObject *child);
 
     /**
      * \brief Set the parent object
@@ -99,6 +100,7 @@ public:
             case ECamera:     return "camera";
             case EIntegrator: return "integrator";
             case ESampler:    return "sampler";
+            case ETexture:    return "texture";
             case ETest:       return "test";
             default:          return "<unknown>";
         }

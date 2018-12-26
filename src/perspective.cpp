@@ -108,7 +108,7 @@ public:
         return Color3f(1.0f);
     }
 
-    void addChild(NoriObject *obj) {
+    void addChild(const std::string &name, NoriObject *obj) {
         switch (obj->getClassType()) {
             case EReconstructionFilter:
                 if (m_rfilter)

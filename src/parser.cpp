@@ -203,7 +203,7 @@ NoriObject *loadFromXML(const std::string &filename) {
 
                 /* Add all children */
                 for (auto ch: children) {
-                    result->addChild(ch);
+					result->addChild(node.attribute("name").value(), ch);
                     ch->setParent(result);
                 }
 

@@ -115,7 +115,7 @@ public:
 	void activate();
 
 	/// Add a child object to the scene (meshes, integrators etc.)
-	void addChild(NoriObject *obj);
+	void addChild(const std::string &name, NoriObject *obj);
 
 	/// Return a string summary of the scene (for debugging purposes)
 	std::string toString() const;

@@ -192,7 +192,7 @@ void Scene::build() {
 	rtcCommitScene(m_scene);
 }
 
-void Scene::addChild(NoriObject *obj) {
+void Scene::addChild(const std::string &name, NoriObject *obj) {
 	switch (obj->getClassType()) {
 	case EShape: {
 		auto shape = static_cast<Shape *>(obj);

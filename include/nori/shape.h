@@ -93,7 +93,7 @@ public:
 	const BSDF* getBSDF() const { return m_bsdf; }
 
 	/// Register a child object (e.g. a BSDF) with the shape
-	virtual void addChild(NoriObject* child) override;
+	virtual void addChild(const std::string& name, NoriObject* child) override;
 
 	/// Initialize internal data structures (called once by the XML parser)
 	virtual void activate() override;

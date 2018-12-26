@@ -20,7 +20,7 @@
 
 NORI_NAMESPACE_BEGIN
 
-void NoriObject::addChild(NoriObject *) {
+void NoriObject::addChild(const std::string &, NoriObject *) {
     throw NoriException(
         "NoriObject::addChild() is not implemented for objects of type '%s'!",
         classTypeName(getClassType()));

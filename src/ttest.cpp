@@ -83,7 +83,7 @@ public:
             delete scene;
     }
 
-    void addChild(NoriObject *obj) {
+    void addChild(const std::string &name, NoriObject *obj) {
         switch (obj->getClassType()) {
             case EBSDF:
                 m_bsdfs.push_back(static_cast<BSDF *>(obj));
