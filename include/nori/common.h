@@ -194,6 +194,11 @@ enum EMeasure {
     EDiscrete
 };
 
+/// Square root variant that gracefully handles arguments < 0 that are due to roundoff errors
+inline float safe_sqrt(float value) {
+	return std::sqrt(std::max(0.0f, value));
+}
+
 //// Convert radians to degrees
 inline float radToDeg(float value) { return value * (180.0f / M_PI); }
 

@@ -22,65 +22,91 @@
 
 NORI_NAMESPACE_BEGIN
 
+/*
+ref: PBR3 13.6
+*/
+
 Point2f Warp::squareToUniformSquare(const Point2f &sample) {
-    return sample;
+	return sample;
 }
 
 float Warp::squareToUniformSquarePdf(const Point2f &sample) {
-    return ((sample.array() >= 0).all() && (sample.array() <= 1).all()) ? 1.0f : 0.0f;
+	return ((sample.array() >= 0).all() && (sample.array() <= 1).all()) ? 1.0f : 0.0f;
 }
 
 Point2f Warp::squareToTent(const Point2f &sample) {
-    throw NoriException("Warp::squareToTent() is not yet implemented!");
+	throw NoriException("Warp::squareToTent() is not yet implemented!");
 }
 
 float Warp::squareToTentPdf(const Point2f &p) {
-    throw NoriException("Warp::squareToTentPdf() is not yet implemented!");
+	throw NoriException("Warp::squareToTentPdf() is not yet implemented!");
 }
 
 Point2f Warp::squareToUniformDisk(const Point2f &sample) {
-    throw NoriException("Warp::squareToUniformDisk() is not yet implemented!");
+	// TODO concentric mapping
+
+	float r = safe_sqrt(sample.x());
+	float theta = 2.0f * M_PI * sample.y();
+	return Point2f(r * std::cos(theta), r * std::sin(theta));
 }
 
 float Warp::squareToUniformDiskPdf(const Point2f &p) {
-    throw NoriException("Warp::squareToUniformDiskPdf() is not yet implemented!");
+	//return INV_PI;
+	return p.squaredNorm() <= 1.0f ? INV_PI : 0;
 }
 
 Vector3f Warp::squareToUniformSphere(const Point2f &sample) {
-    throw NoriException("Warp::squareToUniformSphere() is not yet implemented!");
+	float cosTheta = 1.0f - 2.0f * sample.x();
+	float sinTheta = safe_sqrt(1 - cosTheta * cosTheta);
+	float phi = 2.0f * M_PI * sample.y();
+
+	return Vector3f(sinTheta * std::cos(phi), sinTheta * std::sin(phi), cosTheta);
 }
 
 float Warp::squareToUniformSpherePdf(const Vector3f &v) {
-    throw NoriException("Warp::squareToUniformSpherePdf() is not yet implemented!");
+	return INV_FOURPI;
 }
 
 Vector3f Warp::squareToUniformHemisphere(const Point2f &sample) {
-	// uniform sample along the z-axis
-	float z = sample.x();
-
-	// uniform sample phi, [0, 1] --> [0, 2pi]
+	float cosTheta = sample.x();
+	float sinTheta = safe_sqrt(1 - cosTheta * cosTheta);
 	float phi = 2.0f * M_PI * sample.y();
 
-	float sinTheta = std::sqrt(1 - z * z);
-	// cosTheta == z
+	return Vector3f(sinTheta * std::cos(phi), sinTheta * std::sin(phi), cosTheta);
+}
 
-	return Vector3f(sinTheta * std::cos(phi), sinTheta * std::sin(phi), z);
+float Warp::squareToUniformHemispherePdf(const Vector3f &v) {
+	//return INV_TWOPI;
+	return v.z() > 0 ? INV_TWOPI : 0;
 }
 
 Vector3f Warp::squareToCosineHemisphere(const Point2f &sample) {
-    throw NoriException("Warp::squareToCosineHemisphere() is not yet implemented!");
+	// Malley's Method
+	Point2f p = squareToUniformDisk(sample);
+	float z = safe_sqrt(1 - p.x() * p.x() - p.y() * p.y());
+	return Vector3f(p.x(), p.y(), z);
 }
 
 float Warp::squareToCosineHemispherePdf(const Vector3f &v) {
-    throw NoriException("Warp::squareToCosineHemispherePdf() is not yet implemented!");
+	return v.z() > 0 ? v.z() * INV_PI : 0;
 }
 
 Vector3f Warp::squareToBeckmann(const Point2f &sample, float alpha) {
-    throw NoriException("Warp::squareToBeckmann() is not yet implemented!");
+	float tanTheta2 = -alpha * alpha * std::log(1.0f - sample.x());
+	float cosTheta = 1.0f / safe_sqrt(1.0f + tanTheta2);
+	float sinTheta = safe_sqrt(1 - cosTheta * cosTheta);
+	float phi = 2.0f * M_PI * sample.y();
+
+	return Vector3f(sinTheta * std::cos(phi), sinTheta * std::sin(phi), cosTheta);
 }
 
 float Warp::squareToBeckmannPdf(const Vector3f &m, float alpha) {
-    throw NoriException("Warp::squareToBeckmannPdf() is not yet implemented!");
+	if (m.z() <= 0) return 0;
+
+	float cosTheta2Inv = 1 / (m.z() * m.z());
+	float alpha2Inv = 1 / (alpha * alpha);
+	return INV_PI * alpha2Inv * cosTheta2Inv * cosTheta2Inv *
+	       std::exp(alpha2Inv * (1 - cosTheta2Inv)) * m.z();
 }
 
 NORI_NAMESPACE_END
