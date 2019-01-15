@@ -1,30 +1,31 @@
 <scene>
 	<!-- Independent sample generator, 64 samples per pixel -->
 	<sampler type="independent">
-		<integer name="sampleCount" value="1"/>
+		<integer name="sampleCount" value="64"/>
 	</sampler>
 
 	<!--  -->
-    <integrator type="normal"/>
+	<integrator type="normal"/>
 
 	<!-- Load the Ajax bust (a freely available scan from the Jotero forum) -->
-	<mesh type="obj">
+	<shape type="obj">
 		<string name="filename" value="../../pa1/bunny.obj"/>
+		<transform name="toWorld">
+			<translate value="0.01, -0.1, 0" />
+		</transform>
 
-		<bsdf type="microfacet">
-            <float name="intIOR" value="1.7"/>
-            <color name="kd" value="0.2 0.2 0.4"/>
-            <float name="alpha" value="0.28"/>
-		</bsdf>
-	</mesh>
+		<!-- <bsdf type="microfacet">
+			<float name="intIOR" value="1.7"/>
+			<color name="kd" value="0.2 0.2 0.4"/>
+			<float name="alpha" value="0.28"/>
+		</bsdf> -->
+	</shape>
 
 	<!-- Render the scene viewed by a perspective camera -->
 	<camera type="perspective">
-        <!-- 3D origin, target point, and 'up' vector -->
+		<!-- 3D origin, target point, and 'up' vector -->
 		<transform name="toWorld">
-            <lookat target="0, 0, 0"
-                    origin="0.5, 1, 0.5"
-                    up="0, 1, 0"/>
+			<lookat target="0, 0, 0" origin="0.4, 0.6, 0.4" up="0, 1, 0"/>
 		</transform>
 
 		<!-- Field of view: 30 degrees -->
