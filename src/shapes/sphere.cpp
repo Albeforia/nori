@@ -1,6 +1,7 @@
 #include <nori/shape.h>
 #include <nori/bsdf.h>
 #include <nori/emitter.h>
+#include <nori/warp.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -17,6 +18,10 @@ public:
 		m_center = (m_transform.getMatrix().col(3)).head<3>();
 		m_bbox.min = m_center + Vector3f(-m_radius);
 		m_bbox.max = m_center + Vector3f(m_radius);
+	}
+
+	float area() const override {
+		return 4 * M_PI * m_radius * m_radius;
 	}
 
 	bool rayIntersect(const Ray3f& ray, float& t,
@@ -77,6 +82,80 @@ public:
 		its.geoFrame = Frame(hitdir);
 		its.shFrame = its.geoFrame;
 		its.shape = this;
+	}
+
+	ShapeSamplingResult sample(const Point2f& sample) const override {
+		ShapeSamplingResult result;
+
+		Vector3f v = Warp::squareToUniformSphere(sample);
+
+		result.p = m_transform * Point3f(m_radius * v);
+		result.n = (m_transform * Normal3f(v)).normalized();
+		result.measure = EMeasure::EArea;
+
+		return result;
+	}
+
+	ShapeSamplingResult sample(const Intersection& ref,
+	                           const Point2f& sample) const override {
+		Vector3f refToCenter = m_center - ref.p;
+		float dc2 = refToCenter.squaredNorm();
+		float radius2 = m_radius * m_radius;
+		float sinThetaMax2 = radius2 / dc2;
+
+		if (sinThetaMax2 > 1.0f) {  // ref.p is inside the sphere (m_radius > dc)
+			// just sample the whole surface
+			auto result = this->sample(sample);
+			result.measure = ESolidAngle;
+			return result;
+		}
+		else {
+			float cosThetaMax = safe_sqrt(1 - sinThetaMax2);
+
+			// sample a point on the extended cone resp. to ref.p
+			float cosTheta = 1 - sample.x() * (1 - cosThetaMax);
+			float sinTheta2 = 1 - cosTheta * cosTheta;
+			float phi = 2.0f * M_PI * sample.y();
+
+			// compute spherical coordinates for the actual point
+			float dc = safe_sqrt(dc2);
+			float ds = dc * cosTheta - safe_sqrt(radius2 - dc2 * sinTheta2);
+			float cosAlpha = (dc2 + radius2 - ds * ds) / (2 * dc * m_radius);
+			float sinAlpha = safe_sqrt(1 - cosAlpha * cosAlpha);
+			// the point on the sphere and the point on the cone share the same phi
+
+			// construct a coordinate frame at the sphere center with -refToCenter as z-axis
+			// alpha and phi are local coordinates in fr
+			Frame fr(-refToCenter / dc);
+			Vector3f v = fr.toWorld(
+			  Vector3f(sinAlpha * std::cos(phi), sinAlpha * std::sin(phi), cosAlpha));
+
+			// fill the result
+			ShapeSamplingResult result;
+			result.p = m_transform * Point3f(m_radius * v);
+			result.n = (m_transform * Normal3f(v)).normalized();
+			result.measure = EMeasure::ESolidAngle;
+			return result;
+		}
+	}
+
+	float pdf(const Intersection& ref,
+	          const ShapeSamplingResult& result) const override {
+		Vector3f refToCenter = m_center - ref.p;
+		float dc2 = refToCenter.squaredNorm();
+		float radius2 = m_radius * m_radius;
+		float sinThetaMax2 = radius2 / dc2;
+
+		if (sinThetaMax2 > 1.0f) {
+			return Shape::pdf(ref, result);
+		}
+		else {
+			float cosThetaMax = safe_sqrt(1 - sinThetaMax2);
+
+			// Warp::squareToUniformSphericalCapPdf() already
+			// returns a value with respect to the solid angle measure
+			return 1 / (2.0f * M_PI * (1 - cosThetaMax));
+		}
 	}
 
 	std::string toString() const {

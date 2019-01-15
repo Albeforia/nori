@@ -52,6 +52,8 @@ public:
     /// Return the surface area of the given triangle
     float surfaceArea(uint32_t index) const;
 
+	float area() const override;
+
     //// Return an axis-aligned bounding box containing the given triangle
     BoundingBox3f getBoundingBox(uint32_t index) const;
 
@@ -108,6 +110,11 @@ public:
 
 	void setHitInformation(const Ray3f &ray, const float &t, const RTCHit &hit,
 	                       Intersection &its) const override;
+
+	ShapeSamplingResult sample(const Point2f &sample) const override;
+
+	ShapeSamplingResult sample(const Intersection &ref,
+	                           const Point2f &sample) const override;
 
 protected:
     /// Create an empty mesh

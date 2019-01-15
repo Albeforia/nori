@@ -50,6 +50,18 @@ struct Intersection {
 };
 
 /**
+@brief
+*/
+struct ShapeSamplingResult {
+	/// Sampled surface position
+	Point3f p;
+	/// Sampled surface normal
+	Normal3f n;
+	/// Measure associated with the sample
+	EMeasure measure;
+};
+
+/**
 @brief Base class of all shapes
 */
 class Shape : public NoriObject {
@@ -79,6 +91,11 @@ public:
 	@brief Get the axis-aligned bounding box of this shape
 	*/
 	const BoundingBox3f& getBoundingBox() const { return m_bbox; }
+
+	/**
+	@brief Get the surface area of this shape
+	*/
+	virtual float area() const = 0;
 
 	/// Is this mesh an area emitter?
 	bool isEmitter() const { return m_emitter != nullptr; }
@@ -121,6 +138,29 @@ public:
 	*/
 	virtual void setHitInformation(const Ray3f& ray, const float& t, const RTCHit& hit,
 	                               Intersection& its) const {}
+
+	/**
+	@brief Sample a point on the surface with respect to surface area
+	*/
+	virtual ShapeSamplingResult sample(const Point2f& sample) const = 0;
+
+	/**
+	@brief Return the corresponding pdf with respect to surface area
+	*/
+	virtual float pdf(const ShapeSamplingResult&) const;
+
+	/**
+	@brief Sample a point on the surface with respect to 
+	the solid angle subtended by the reference point
+	*/
+	virtual ShapeSamplingResult sample(const Intersection& ref,
+	                                   const Point2f& sample) const = 0;
+
+	/**
+	@brief Return the corresponding pdf with respect to solid angles
+	*/
+	virtual float pdf(const Intersection& ref,
+	                  const ShapeSamplingResult&) const;
 
 protected:
 	std::string m_name;

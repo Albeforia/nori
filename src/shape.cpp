@@ -23,6 +23,16 @@ void Shape::activate() {
 	}
 }
 
+float Shape::pdf(const ShapeSamplingResult &) const {
+	return 1 / area();
+}
+
+float Shape::pdf(const Intersection &ref, const ShapeSamplingResult &result) const {
+	// ref: PBR3 5.5.3
+	Vector3f v = ref.p - result.p;
+	return v.squaredNorm() / (std::abs(result.n.dot(v)) * area());
+}
+
 void Shape::addChild(const std::string &name, NoriObject *obj) {
 	switch (obj->getClassType()) {
 	case EBSDF:

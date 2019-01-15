@@ -100,7 +100,7 @@ Vector3f Warp::squareToUniformSphericalCap(const Point2f &sample, float cosTheta
 }
 
 float Warp::squareToUniformSphericalCapPdf(const Vector3f &v, float cosThetaMax) {
-	return 1 / (2.0f * M_PI * (1 - cosThetaMax));
+	return v.z() > cosThetaMax ? 1 / (2.0f * M_PI * (1 - cosThetaMax)) : 0;
 }
 
 Vector3f Warp::squareToBeckmann(const Point2f &sample, float alpha) {
