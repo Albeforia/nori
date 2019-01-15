@@ -62,6 +62,14 @@ public:
 	/// Probability density of \ref squareToCosineHemisphere()
 	static float squareToCosineHemispherePdf(const Vector3f &v);
 
+	/// Uniformly sample a vector on the unit spherical cap around the pole (0,0,1) with respect to solid angles
+	static Vector3f squareToUniformSphericalCap(const Point2f &sample,
+	                                            float cosThetaMax);
+
+	/// Probability density of \ref squareToUniformSphericalCap()
+	static float squareToUniformSphericalCapPdf(const Vector3f &v,
+	                                            float cosThetaMax);
+
 	/// Warp a uniformly distributed square sample to a Beckmann distribution * cosine for the given 'alpha' parameter
 	static Vector3f squareToBeckmann(const Point2f &sample, float alpha);
 

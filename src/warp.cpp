@@ -91,6 +91,18 @@ float Warp::squareToCosineHemispherePdf(const Vector3f &v) {
 	return v.z() > 0 ? v.z() * INV_PI : 0;
 }
 
+Vector3f Warp::squareToUniformSphericalCap(const Point2f &sample, float cosThetaMax) {
+	float cosTheta = 1 - sample.x() * (1 - cosThetaMax);
+	float sinTheta = safe_sqrt(1 - cosTheta * cosTheta);
+	float phi = 2.0f * M_PI * sample.y();
+
+	return Vector3f(sinTheta * std::cos(phi), sinTheta * std::sin(phi), cosTheta);
+}
+
+float Warp::squareToUniformSphericalCapPdf(const Vector3f &v, float cosThetaMax) {
+	return 1 / (2.0f * M_PI * (1 - cosThetaMax));
+}
+
 Vector3f Warp::squareToBeckmann(const Point2f &sample, float alpha) {
 	float tanTheta2 = -alpha * alpha * std::log(1.0f - sample.x());
 	float cosTheta = 1.0f / safe_sqrt(1.0f + tanTheta2);
