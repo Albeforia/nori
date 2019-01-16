@@ -55,6 +55,15 @@ float Warp::squareToUniformDiskPdf(const Point2f &p) {
 	return p.squaredNorm() <= 1.0f ? INV_PI : 0;
 }
 
+Point2f Warp::squareToUniformTriangle(const Point2f &sample) {
+	float tmp = safe_sqrt(sample.x());
+	return Point2f(1 - tmp, tmp * sample.y());
+}
+
+float Warp::squareToUniformTrianglePdf(const Point2f &p) {
+	return p.x() + p.y() < 1 ? 2.0f : 0;
+}
+
 Vector3f Warp::squareToUniformSphere(const Point2f &sample) {
 	float cosTheta = 1.0f - 2.0f * sample.x();
 	float sinTheta = safe_sqrt(1 - cosTheta * cosTheta);
