@@ -128,6 +128,7 @@ add_executable(nori
   src/shapes/sphere.cpp
 
   src/emitters/point.cpp
+  src/emitters/area.cpp
 
   src/textures/constexture.cpp
   src/textures/checkerboard.cpp

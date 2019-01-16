@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <nori/object.h>
+#include <nori/shape.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -27,7 +27,8 @@ struct Intersection;
 /*
 @brief Convenience data structure for sampling a emitter
 */
-struct EmitterQueryRecord {
+struct EmitterSamplingResult {
+	Color3f Le;
 	Vector3f wi;
 	float distance;
 	float pdf;
@@ -65,19 +66,43 @@ public:
 	*/
 	bool isType(EEmitterType type) const { return (m_typeFlags & (int)type) != 0; }
 
+	/**
+	@brief Get the shape to which the emitter is currently attached
+	*/
+	Shape* getShape() { return m_shape; }
+
+	/**
+	@brief Get the shape to which the emitter is currently attached (const version)
+	*/
+	const Shape* getShape() const { return m_shape; }
+
+	/**
+	@brief Query the radiance
+
+	@param ss	A sample or intersection point on this emitter
+	@param v	An outgoing direction for the radiance
+
+	@return The radiance emitted from the front side
+	*/
+	virtual Color3f eval(const ShapeSamplingResult& ss,
+	                     const Vector3f& v) const = 0;
+
 	/*
 	@brief Sample the emitter.
 
-	@param eRec	A record with detailed information to be filled
 	@param ref	A reference point on the surface 
 
 	@return The radiance arriving at the reference point from the emitter,
-	assuming there is no occlusion between the emitter and the point
+	assuming there is no occlusion between the emitter and the point, and
+	other information
 	*/
-	virtual Color3f sample(EmitterQueryRecord& eRec, const Intersection& ref) const = 0;
+	virtual EmitterSamplingResult sample(const Intersection& ref,
+	                                     const Point2f& sample) const = 0;
 
-private:
+protected:
 	uint32_t m_typeFlags;
+
+	Shape* m_shape = nullptr;
 };
 
 NORI_NAMESPACE_END

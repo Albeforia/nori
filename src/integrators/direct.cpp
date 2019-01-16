@@ -2,6 +2,7 @@
 #include <nori/scene.h>
 #include <nori/bsdf.h>
 #include <nori/emitter.h>
+#include <nori/warp.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -19,27 +20,31 @@ public:
 			return Color3f(0.0f);
 		}
 
+		if (its.shape->isEmitter()) {
+			return its.shape->getEmitter()->eval(its, -ray.d);
+		}
+
 		auto& emitters = scene->getEmitters();
 
-		// assuming only point lights here
 		Color3f estimation = 0;
 		for (auto emitter : emitters) {
-			EmitterQueryRecord eRec;
-			auto Ld = emitter->sample(eRec, its);
+			auto emitterSample = emitter->sample(its, sampler->next2D());
+			Color3f Ld = emitterSample.Le;
 
 			auto bsdf = its.shape->getBSDF();
-			BSDFQueryRecord bRec(its.toLocal(eRec.wi), its.toLocal(-ray.d),
+			BSDFQueryRecord bRec(its.toLocal(emitterSample.wi), its.toLocal(-ray.d),
 			                     EMeasure::ESolidAngle, its.uv);
 			auto bsdfVal = bsdf->eval(bRec);
 
 			// test visibility
-			Ray3f shadowRay(its.p, eRec.wi, ray.mint, eRec.distance);
+			// '-Epsilon' to avoid hitting the emitter
+			Ray3f shadowRay(its.p, emitterSample.wi, ray.mint, emitterSample.distance - Epsilon);
 			if (scene->rayIntersect(shadowRay)) {
 				Ld = Color3f(0.0f);
 			}
 
-			float cosThetai = clamp(its.shFrame.n.dot(eRec.wi), 0.0f, 1.0f);
-			estimation += (Ld * bsdfVal * cosThetai) / eRec.pdf;
+			float cosThetai = clamp(its.shFrame.n.dot(emitterSample.wi), 0.0f, 1.0f);
+			estimation += (Ld * bsdfVal * cosThetai) / emitterSample.pdf;
 		}
 
 		return estimation;

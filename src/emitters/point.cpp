@@ -16,6 +16,14 @@ public:
 	}
 
 	/*
+	For point lights, we could never hit or 'sample' a point on it
+	*/
+	Color3f eval(const ShapeSamplingResult& ss,
+	             const Vector3f& v) const override {
+		return Color3f(0.0f);
+	}
+
+	/*
 	For point lights, we are actually sampling a delta distribution.
 	The function always returns a single direction instead of using random samples.
 	The delta distributions exist both in the Ld and pdf and they cancel out in the
@@ -23,15 +31,20 @@ public:
 	analytic solution.
 	Either way, the pdf is useless, so we set it to 1.
 	*/
-	virtual Color3f sample(EmitterQueryRecord& eRec, const Intersection& ref) const override {
-		eRec.wi = (m_position - ref.p);
-		float dist = eRec.wi.norm();
-		eRec.distance = dist;
-		eRec.wi /= dist;
-		eRec.pdf = 1.0f;
+	EmitterSamplingResult sample(const Intersection& ref,
+	                             const Point2f& sample) const override {
+		EmitterSamplingResult result;
+
+		result.wi = (m_position - ref.p);
+		float dist = result.wi.norm();
+		result.distance = dist;
+		result.wi /= dist;
+		result.pdf = 1.0f;
 
 		// Radiant intensity I = power / (4*pi)
-		return m_power / (4 * M_PI * dist * dist);
+		result.Le = m_power / (4 * M_PI * dist * dist);
+
+		return result;
 	}
 
 	std::string toString() const {

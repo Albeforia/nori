@@ -198,6 +198,9 @@ void Scene::addChild(const std::string &name, NoriObject *obj) {
 		auto shape = static_cast<Shape *>(obj);
 		//m_accel->addMesh(mesh);
 		m_shapes.push_back(shape);
+		if (shape->isEmitter()) {
+			m_emitters.push_back(shape->getEmitter());
+		}
 	} break;
 
 	case EEmitter: {

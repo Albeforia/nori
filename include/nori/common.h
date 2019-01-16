@@ -125,7 +125,7 @@ class ImageBlock;
 class Integrator;
 class KDTree;
 class Emitter;
-struct EmitterQueryRecord;
+struct EmitterSamplingResult;
 class Mesh;
 class NoriObject;
 class NoriObjectFactory;

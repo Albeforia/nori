@@ -147,6 +147,9 @@ public:
 		float sinThetaMax2 = radius2 / dc2;
 
 		if (sinThetaMax2 > 1.0f) {
+			// hint: uniformly sample a direction around the ref.p will lead to
+			// unevenly distributed points on the sphere surface. Therefore the
+			// pdf with respect to solid angles is not a constant
 			return Shape::pdf(ref, result);
 		}
 		else {

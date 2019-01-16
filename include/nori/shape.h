@@ -59,6 +59,12 @@ struct ShapeSamplingResult {
 	Normal3f n;
 	/// Measure associated with the sample
 	EMeasure measure;
+
+	ShapeSamplingResult() = default;
+
+	/// construct from an Intersection
+	ShapeSamplingResult(const Intersection& its) :
+	    p{its.p}, n{its.shFrame.n} {}
 };
 
 /**
