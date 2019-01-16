@@ -127,6 +127,9 @@ public:
         }
 
         m_name = filename.str();
+
+		buildSamplingTable();
+
         cout << "done. (V=" << m_V.cols() << ", F=" << m_F.cols() << ", took "
              << timer.elapsedString() << " and "
              << memString(m_F.size() * sizeof(uint32_t) +

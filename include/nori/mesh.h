@@ -19,6 +19,7 @@
 #pragma once
 
 #include <nori/shape.h>
+#include <nori/dpdf.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -34,33 +35,27 @@ class Mesh : public Shape {
 public:
 	Mesh(const PropertyList &props);
 
-    /// Release all memory
-    virtual ~Mesh();
+	/// Release all memory
+	virtual ~Mesh();
 
-    /// Return the total number of triangles in this shape
-    uint32_t getTriangleCount() const { return (uint32_t) m_F.cols(); }
+	/// Return the total number of triangles in this shape
+	uint32_t getTriangleCount() const { return (uint32_t)m_F.cols(); }
 
-    /// Return the total number of vertices in this shape
-    uint32_t getVertexCount() const { return (uint32_t) m_V.cols(); }
+	/// Return the total number of vertices in this shape
+	uint32_t getVertexCount() const { return (uint32_t)m_V.cols(); }
 
-    /**
-     * \brief Uniformly sample a position on the mesh with
-     * respect to surface area. Returns both position and normal
-     */
-    void samplePosition(const Point2f &sample, Point3f &p, Normal3f &n) const;
+	/// Return the surface area of the given triangle
+	float triangleArea(uint32_t index) const;
 
-    /// Return the surface area of the given triangle
-    float surfaceArea(uint32_t index) const;
+	float area() const override { return m_area; }
 
-	float area() const override;
+	//// Return an axis-aligned bounding box containing the given triangle
+	BoundingBox3f getBoundingBox(uint32_t index) const;
 
-    //// Return an axis-aligned bounding box containing the given triangle
-    BoundingBox3f getBoundingBox(uint32_t index) const;
+	//// Return the centroid of the given triangle
+	Point3f getCentroid(uint32_t index) const;
 
-    //// Return the centroid of the given triangle
-    Point3f getCentroid(uint32_t index) const;
-
-    /** \brief Ray-triangle intersection test
+	/** \brief Ray-triangle intersection test
      *
      * Uses the algorithm by Moeller and Trumbore discussed at
      * <tt>http://www.acm.org/jgt/papers/MollerTrumbore97/code.html</tt>.
@@ -85,24 +80,24 @@ public:
      * \return
      *   \c true if an intersection has been detected
      */
-    bool rayIntersect(uint32_t index, const Ray3f &ray, float &u, float &v, float &t) const;
+	bool rayIntersect(uint32_t index, const Ray3f &ray, float &u, float &v, float &t) const;
 
-    /// Return a pointer to the vertex positions
-    const MatrixXf &getVertexPositions() const { return m_V; }
+	/// Return a pointer to the vertex positions
+	const MatrixXf &getVertexPositions() const { return m_V; }
 
-    /// Return a pointer to the vertex normals (or \c nullptr if there are none)
-    const MatrixXf &getVertexNormals() const { return m_N; }
+	/// Return a pointer to the vertex normals (or \c nullptr if there are none)
+	const MatrixXf &getVertexNormals() const { return m_N; }
 
-    /// Return a pointer to the texture coordinates (or \c nullptr if there are none)
-    const MatrixXf &getVertexTexCoords() const { return m_UV; }
+	/// Return a pointer to the texture coordinates (or \c nullptr if there are none)
+	const MatrixXf &getVertexTexCoords() const { return m_UV; }
 
-    /// Return a pointer to the triangle vertex index list
-    const MatrixXu &getIndices() const { return m_F; }
+	/// Return a pointer to the triangle vertex index list
+	const MatrixXu &getIndices() const { return m_F; }
 
-    /// Return a human-readable summary of this instance
-    std::string toString() const;
+	/// Return a human-readable summary of this instance
+	std::string toString() const;
 
-    /**
+	/**
      * \brief Return the type of object (i.e. Mesh/BSDF/etc.)
      * provided by this instance
      * */
@@ -117,15 +112,23 @@ public:
 	                           const Point2f &sample) const override;
 
 protected:
-    /// Create an empty mesh
-    //Mesh();
+	/// Create an empty mesh
+	//Mesh();
 
 protected:
-    MatrixXf      m_V;                   ///< Vertex positions
-    MatrixXf      m_N;                   ///< Vertex normals
-    MatrixXf      m_UV;                  ///< Vertex texture coordinates
-    MatrixXu      m_F;                   ///< Faces
+	MatrixXf m_V;   ///< Vertex positions
+	MatrixXf m_N;   ///< Vertex normals
+	MatrixXf m_UV;  ///< Vertex texture coordinates
+	MatrixXu m_F;   ///< Faces
 
+	void buildSamplingTable();
+
+private:
+	Point3f sampleTriangle(uint32_t index, const Point2f &sample,
+	                       Normal3f &normal) const;
+
+	float m_area;
+	DiscretePDF m_areaPDF;
 };
 
 NORI_NAMESPACE_END
