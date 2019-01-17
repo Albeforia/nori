@@ -51,13 +51,16 @@
         <string name="filename" value="meshes/sphere2.obj"/>
     </shape>
 
-    <!-- <shape type="obj">
+    <shape type="obj">
         <string name="filename" value="meshes/light.obj"/>
-    </shape> -->
+        <emitter type="area">
+            <color name="radiance" value="2 2 2"/>
+        </emitter>
+    </shape>
 
-    <emitter type="point">
+    <!-- <emitter type="point">
         <point name="position" value="0, 1.38, -0.03"/>
-    </emitter>
+    </emitter> -->
 
     <!-- <emitter type="point">
         <point name="position" value="-1, 0.8, -0.03"/>
