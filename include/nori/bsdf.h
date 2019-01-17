@@ -46,6 +46,10 @@ struct BSDFQueryRecord {
     BSDFQueryRecord(const Vector3f &wi)
         : wi(wi), measure(EUnknownMeasure) { }
 
+	/// Create a new record for sampling the BSDF
+	BSDFQueryRecord(const Vector3f &wi, const Point2f &uv) :
+	    wi(wi), measure(EUnknownMeasure), uv(uv) {}
+
     /// Create a new record for querying the BSDF
     BSDFQueryRecord(const Vector3f &wi,
             const Vector3f &wo, EMeasure measure)
