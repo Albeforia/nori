@@ -29,8 +29,12 @@ float Shape::pdf(const ShapeSamplingResult &) const {
 
 float Shape::pdf(const Intersection &ref, const ShapeSamplingResult &result) const {
 	// ref: PBR3 5.5.3
+
+	float pdfArea = this->pdf(result);
 	Vector3f v = ref.p - result.p;
-	return v.squaredNorm() / (std::abs(result.n.dot(v)) * area());
+	float dist = v.norm();
+	v /= dist;
+	return pdfArea * (dist * dist) / (std::abs(result.n.dot(v)));
 }
 
 void Shape::addChild(const std::string &name, NoriObject *obj) {
