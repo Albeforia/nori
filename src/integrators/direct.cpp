@@ -93,8 +93,8 @@ public:
 					}
 				}
 
-				float cosThetai = clamp(its.shFrame.n.dot(wo), 0.0f, 1.0f);
-				estimation += (Ld * bsdfVal * cosThetai) / bsdfPDF;
+				// note BSDF::sample() already returns eval() / pdf() * cos(theta)
+				estimation += Ld * bsdfVal;
 			}
 		}
 		else {
