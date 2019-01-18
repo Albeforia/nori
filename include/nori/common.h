@@ -243,6 +243,9 @@ inline int mod(int a, int b) {
     return (r < 0) ? r+b : r;
 }
 
+/// Reflect a vector
+extern Vector3f reflect(const Vector3f &v, const Vector3f &n);
+
 /// Compute a direction for the given coordinates in spherical coordinates
 extern Vector3f sphericalDirection(float theta, float phi);
 
@@ -262,6 +265,21 @@ extern Point2f sphericalCoordinates(const Vector3f &dir);
  *      Refractive index of the interior
  */
 extern float fresnel(float cosThetaI, float extIOR, float intIOR);
+
+/**
+@brief Evaluate the Beckmann distribution
+
+@param h	The half-vector in local space
+*/
+extern float beckmann(const Vector3f &h, float alpha);
+
+/**
+@brief Evaluate the Smith's shadowing-masking function
+
+@param v	An arbitrary direction in local space
+@param h	The half-vector in local space
+*/
+extern float smithG1(const Vector3f &v, const Vector3f &h, float alpha);
 
 /**
  * \brief Return the global file resolver instance

@@ -21,6 +21,7 @@
 #include <Eigen/LU>
 #include <filesystem/resolver.h>
 #include <iomanip>
+#include <nori/frame.h>
 
 #if defined(PLATFORM_LINUX)
 #include <malloc.h>
@@ -234,6 +235,10 @@ Transform Transform::operator*(const Transform &t) const {
         t.m_inverse * m_inverse);
 }
 
+Vector3f reflect(const Vector3f &v, const Vector3f &n) {
+	return 2 * v.dot(n) * n - v;
+}
+
 Vector3f sphericalDirection(float theta, float phi) {
     float sinTheta, cosTheta, sinPhi, cosPhi;
 
@@ -297,6 +302,32 @@ float fresnel(float cosThetaI, float extIOR, float intIOR) {
              / (etaT * cosThetaI + etaI * cosThetaT);
 
     return (Rs * Rs + Rp * Rp) / 2.0f;
+}
+
+float beckmann(const Vector3f &h, float alpha) {
+	float cosThetaH = Frame::cosTheta(h);
+	if (cosThetaH <= 0) return 0.0f;
+
+	float cosThetaH2 = cosThetaH * cosThetaH;
+	float alpha2 = alpha * alpha;
+	float exponent = (1.0f - 1.0f / cosThetaH2) / alpha2;
+	return std::exp(exponent) / (M_PI * alpha2 * cosThetaH2 * cosThetaH2);
+}
+
+float smithG1(const Vector3f &v, const Vector3f &h, float alpha) {
+	/* Ensure consistent orientation (can't see the back
+	   of the microfacet from the front and vice versa) */
+	if (v.dot(h) * Frame::cosTheta(v) <= 0) return 0.0f;
+
+	/* Perpendicular incidence -- no shadowing/masking */
+	float tanTheta = std::abs(Frame::tanTheta(v));
+	if (tanTheta == 0.0f) return 1.0f;
+
+	float b = 1.0f / (alpha * tanTheta);
+	if (b >= 1.6f) return 1.0f;
+
+	float b2 = b * b;
+	return (3.535f * b + 2.181f * b2) / (1.0f + 2.276f * b + 2.577f * b2);
 }
 
 bool solveQuadratic(float a, float b, float c, float &t0, float &t1) {
