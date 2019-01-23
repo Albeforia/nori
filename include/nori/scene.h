@@ -19,6 +19,7 @@
 #pragma once
 
 #include <nori/accel.h>
+#include <nori/dpdf.h>
 #include <embree3/rtcore.h>
 #include <unordered_map>
 
@@ -62,6 +63,8 @@ public:
 
 	/// Return a reference to an array containing all emitters
 	const std::vector<Emitter *> &getEmitters() const { return m_emitters; }
+
+	const DiscretePDF &getEmitterPDF() const { return m_emitterPDF; }
 
 	/**
      * \brief Intersect a ray against all triangles stored in the scene
@@ -137,6 +140,8 @@ private:
 	Sampler *m_sampler = nullptr;
 	Camera *m_camera = nullptr;
 	Accel *m_accel = nullptr;
+
+	DiscretePDF m_emitterPDF;
 
 	RTCScene m_scene = nullptr;  // Embree scene
 

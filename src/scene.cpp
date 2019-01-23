@@ -99,6 +99,15 @@ void Scene::activate() {
 	rtcSetSceneFlags(m_scene, sceneFlags);
 	build();
 
+	// build pdf for emitters
+	if (m_emitters.size() > 0) {
+		m_emitterPDF.reserve(m_emitters.size());
+		for (uint32_t i = 0; i < m_emitters.size(); i++) {
+			m_emitterPDF.append(1.0f);
+		}
+		m_emitterPDF.normalize();
+	}
+
 	cout << endl;
 	cout << "Configuration: " << toString() << endl;
 	cout << endl;

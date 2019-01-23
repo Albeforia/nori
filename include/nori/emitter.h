@@ -66,6 +66,14 @@ public:
 	*/
 	bool isType(EEmitterType type) const { return (m_typeFlags & (int)type) != 0; }
 
+	/*
+	@brief Check whether the emitter is described by a delta distribution
+	*/
+	bool isDelta() const {
+		return m_typeFlags & (int)EDeltaPosition ||
+		       m_typeFlags & (int)EDeltaDirection;
+	}
+
 	/**
 	@brief Get the shape to which the emitter is currently attached
 	*/
